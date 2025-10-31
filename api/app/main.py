@@ -9,6 +9,10 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 app = FastAPI(title="HF Papers API", version="0.1.0")
 
+from .routers import router as papers_router
+app.include_router(papers_router)
+
+
 def db_ok() -> bool:
     try:
         conn = psycopg2.connect(os.getenv("DATABASE_URL"))
