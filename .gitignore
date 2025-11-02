@@ -7,3 +7,21 @@ __pycache__/
 # docker volumes/logs (keep compose file tracked)
 db_data/
 *.log
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# macOS
+.DS_Store
+
+# Docker
+db_data/
+
+# Node / Next.js (frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/.vercel/
+frontend/.env.local
+
