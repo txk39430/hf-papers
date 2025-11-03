@@ -6,7 +6,7 @@ class Paper(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-    authors = Column(String)
+    authors = Column(String, nullable=False)
     published = Column(Date)
     url = Column(String)
     source = Column(String)
