@@ -2,169 +2,111 @@
 
 import { useEffect, useState } from "react";
 
-interface Paper {
-  id: number;
-  title: string;
-  authors: string;
-  published: string;
-  url: string;
-  source: string;
-}
-
 export default function Home() {
-  const [papers, setPapers] = useState<Paper[]>([]);
-  const [title, setTitle] = useState("");
-  const [authors, setAuthors] = useState("");
-  const [published, setPublished] = useState("");
-  const [url, setUrl] = useState("");
-  const [source, setSource] = useState("");
-  const [search, setSearch] = useState("");
-  const [filterSource, setFilterSource] = useState("");
+  const [papers, setPapers] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch papers from backend
-  const fetchPapers = async () => {
+  const limit = 9;
+  const totalPages = Math.ceil(total / limit);
+
+  const fetchPapers = async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (search) params.append("q", search);
-      if (filterSource) params.append("source", filterSource);
-
+      const skip = (pageNum - 1) * limit;
       const res = await fetch(
-        `http://127.0.0.1:8000/api/papers?${params.toString()}`,
+        `http://127.0.0.1:8000/api/papers?skip=${skip}&limit=${limit}`,
         { cache: "no-store" }
       );
       const data = await res.json();
-      setPapers(data.results || data || []);
+      setPapers(data.results || []);
+      setTotal(data.total || 0);
     } catch (err) {
-      console.error("Error fetching papers:", err);
+      console.error("❌ Fetch error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPapers();
-  }, []);
-
-  // ✅ Add new paper
-  const addPaper = async () => {
-    if (!title || !authors || !published || !url || !source) return;
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/papers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, authors, published, url, source }),
-      });
-
-      if (res.ok) {
-        setTitle("");
-        setAuthors("");
-        setPublished("");
-        setUrl("");
-        setSource("");
-        fetchPapers();
-      } else {
-        console.error("Failed to add paper");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    fetchPapers(page);
+  }, [page]);
 
   return (
-    <main className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-6 text-blue-600">
-        📄 HuggingFace Papers Clone
-      </h1>
+    <main className="bg-gray-50 min-h-screen py-10">
+      <div className="max-w-7xl mx-auto px-6">
+        <h1 className="text-4xl font-bold mb-10 text-gray-900">
+          🧠 Daily Papers
+        </h1>
 
-      {/* Add New Paper Form */}
-      <div className="border p-4 rounded mb-6">
-        <h2 className="font-semibold mb-3">➕ Add New Paper</h2>
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <input
-            className="border p-2"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            className="border p-2"
-            placeholder="Authors (e.g., Alice; Bob)"
-            value={authors}
-            onChange={(e) => setAuthors(e.target.value)}
-          />
-          <input
-            className="border p-2"
-            placeholder="Published (YYYY-MM-DD)"
-            value={published}
-            onChange={(e) => setPublished(e.target.value)}
-          />
-          <input
-            className="border p-2"
-            placeholder="URL"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <input
-            className="border p-2 col-span-2"
-            placeholder="Source (e.g., arxiv)"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
-        </div>
-        <button
-          onClick={addPaper}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Add Paper
-        </button>
-      </div>
-
-      {/* Search Section */}
-      <div className="flex gap-2 mb-6">
-        <input
-          className="border p-2 flex-grow"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <input
-          className="border p-2 w-48"
-          placeholder="Source (e.g., arxiv)"
-          value={filterSource}
-          onChange={(e) => setFilterSource(e.target.value)}
-        />
-        <button
-          onClick={fetchPapers}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Search
-        </button>
-      </div>
-
-      {/* Papers List */}
-      {papers.length === 0 ? (
-        <p className="text-center text-gray-500">No papers found.</p>
-      ) : (
-        <div className="space-y-4">
-          {papers.map((paper) => (
-            <div
-              key={paper.id}
-              className="border rounded p-4 hover:shadow transition"
-            >
-              <a
-                href={paper.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-lg font-semibold text-blue-700 hover:underline"
+        {loading ? (
+          <p className="text-center text-gray-500">Loading papers...</p>
+        ) : papers.length === 0 ? (
+          <p className="text-center text-gray-500">No papers found.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {papers.map((paper) => (
+              <div
+                key={paper.id}
+                className="bg-white rounded-2xl shadow-sm border hover:shadow-md transition-all overflow-hidden"
               >
-                {paper.title}
-              </a>
-              <p className="text-sm text-gray-600">{paper.authors}</p>
-              <p className="text-sm text-gray-500">
-                📅 {paper.published} | 🧩 {paper.source}
-              </p>
-            </div>
-          ))}
+                <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-medium">
+                  🧾 Paper Preview
+                </div>
+                <div className="p-5">
+                  <a
+                    href={paper.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition"
+                  >
+                    {paper.title}
+                  </a>
+                  <p className="text-gray-600 text-sm mt-2">
+                    {paper.authors || "Unknown authors"}
+                  </p>
+                  <div className="flex justify-between items-center mt-3 text-gray-400 text-sm">
+                    <span>📅 {paper.published}</span>
+                    <span>🌐 {paper.source}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        <div className="flex justify-center items-center gap-6 mt-12">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className={`px-5 py-2 rounded-full border text-sm transition-all duration-200 ${
+              page === 1
+                ? "border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:shadow-sm"
+            }`}
+          >
+            ← Previous
+          </button>
+
+          <span className="text-gray-500 font-medium">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className={`px-5 py-2 rounded-full border text-sm transition-all duration-200 ${
+              page === totalPages
+                ? "border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:shadow-sm"
+            }`}
+          >
+            Next →
+          </button>
         </div>
-      )}
+      </div>
     </main>
   );
 }
