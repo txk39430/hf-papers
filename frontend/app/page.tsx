@@ -1,186 +1,171 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
+interface Paper {
+  id: number;
+  title: string;
+  authors: string;
+  published: string;
+  url: string;
+  source: string;
+}
+
 export default function Home() {
-  const [papers, setPapers] = useState<any[]>([]);
-  const [q, setQ] = useState("");
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [title, setTitle] = useState("");
+  const [authors, setAuthors] = useState("");
+  const [published, setPublished] = useState("");
+  const [url, setUrl] = useState("");
   const [source, setSource] = useState("");
-  const [limit] = useState(5);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [filterSource, setFilterSource] = useState("");
 
-  // New state for add form
-  const [newPaper, setNewPaper] = useState({
-    title: "",
-    authors: "",
-    published: "",
-    url: "",
-    source: "",
-  });
-
-  async function fetchPapers() {
-    const params = new URLSearchParams();
-    if (q) params.append("q", q);
-    if (source) params.append("source", source);
-    params.append("limit", limit.toString());
-    params.append("offset", offset.toString());
-
+  // ✅ Fetch papers from backend
+  const fetchPapers = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/papers?${params.toString()}`);
+      const params = new URLSearchParams();
+      if (search) params.append("q", search);
+      if (filterSource) params.append("source", filterSource);
+
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/papers?${params.toString()}`,
+        { cache: "no-store" }
+      );
       const data = await res.json();
-      setPapers(data.results || []);
-      setTotal(data.total || 0);
+      setPapers(data.results || data || []);
     } catch (err) {
       console.error("Error fetching papers:", err);
     }
-  }
-
-  async function addPaper(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:8000/api/papers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPaper),
-      });
-      if (res.ok) {
-        setNewPaper({ title: "", authors: "", published: "", url: "", source: "" });
-        fetchPapers(); // refresh list
-        alert("✅ Paper added!");
-      } else {
-        alert("❌ Failed to add paper.");
-      }
-    } catch (err) {
-      console.error("Error adding paper:", err);
-    }
-  }
+  };
 
   useEffect(() => {
     fetchPapers();
-  }, [offset]);
+  }, []);
 
-  const totalPages = Math.ceil(total / limit);
+  // ✅ Add new paper
+  const addPaper = async () => {
+    if (!title || !authors || !published || !url || !source) return;
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/papers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, authors, published, url, source }),
+      });
+
+      if (res.ok) {
+        setTitle("");
+        setAuthors("");
+        setPublished("");
+        setUrl("");
+        setSource("");
+        fetchPapers();
+      } else {
+        console.error("Failed to add paper");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
+    <main className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold text-center mb-6 text-blue-600">
         📄 HuggingFace Papers Clone
       </h1>
 
-      {/* Add Paper Form */}
-      <form onSubmit={addPaper} className="border p-4 rounded mb-6 shadow">
-        <h2 className="text-xl font-semibold mb-3">➕ Add New Paper</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Add New Paper Form */}
+      <div className="border p-4 rounded mb-6">
+        <h2 className="font-semibold mb-3">➕ Add New Paper</h2>
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <input
-            required
+            className="border p-2"
             placeholder="Title"
-            value={newPaper.title}
-            onChange={(e) => setNewPaper({ ...newPaper, title: e.target.value })}
-            className="border rounded px-3 py-2"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
           <input
-            required
+            className="border p-2"
             placeholder="Authors (e.g., Alice; Bob)"
-            value={newPaper.authors}
-            onChange={(e) => setNewPaper({ ...newPaper, authors: e.target.value })}
-            className="border rounded px-3 py-2"
+            value={authors}
+            onChange={(e) => setAuthors(e.target.value)}
           />
           <input
-            required
+            className="border p-2"
             placeholder="Published (YYYY-MM-DD)"
-            value={newPaper.published}
-            onChange={(e) => setNewPaper({ ...newPaper, published: e.target.value })}
-            className="border rounded px-3 py-2"
+            value={published}
+            onChange={(e) => setPublished(e.target.value)}
           />
           <input
-            required
+            className="border p-2"
             placeholder="URL"
-            value={newPaper.url}
-            onChange={(e) => setNewPaper({ ...newPaper, url: e.target.value })}
-            className="border rounded px-3 py-2"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
           />
           <input
-            required
+            className="border p-2 col-span-2"
             placeholder="Source (e.g., arxiv)"
-            value={newPaper.source}
-            onChange={(e) => setNewPaper({ ...newPaper, source: e.target.value })}
-            className="border rounded px-3 py-2"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
           />
         </div>
         <button
-          type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded mt-3 hover:bg-green-700"
+          onClick={addPaper}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           Add Paper
         </button>
-      </form>
+      </div>
 
-      {/* Search + Filter */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-6">
+      {/* Search Section */}
+      <div className="flex gap-2 mb-6">
         <input
+          className="border p-2 flex-grow"
           placeholder="Search..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="border rounded px-3 py-2 flex-1"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
         <input
+          className="border p-2 w-48"
           placeholder="Source (e.g., arxiv)"
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          className="border rounded px-3 py-2"
+          value={filterSource}
+          onChange={(e) => setFilterSource(e.target.value)}
         />
         <button
-          onClick={() => {
-            setOffset(0);
-            fetchPapers();
-          }}
+          onClick={fetchPapers}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Search
         </button>
       </div>
 
-      {/* Results */}
-      <div className="border rounded p-4 shadow">
-        {papers.length === 0 ? (
-          <p className="text-gray-500 text-center">No papers found.</p>
-        ) : (
-          papers.map((p) => (
-            <div key={p.id} className="py-3 border-b last:border-none">
-              <a href={p.url} target="_blank" className="text-blue-600 hover:underline font-medium">
-                {p.title}
+      {/* Papers List */}
+      {papers.length === 0 ? (
+        <p className="text-center text-gray-500">No papers found.</p>
+      ) : (
+        <div className="space-y-4">
+          {papers.map((paper) => (
+            <div
+              key={paper.id}
+              className="border rounded p-4 hover:shadow transition"
+            >
+              <a
+                href={paper.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-lg font-semibold text-blue-700 hover:underline"
+              >
+                {paper.title}
               </a>
-              <div className="text-sm text-gray-600">
-                {p.authors} — <span className="italic">{p.source}</span>
-              </div>
+              <p className="text-sm text-gray-600">{paper.authors}</p>
+              <p className="text-sm text-gray-500">
+                📅 {paper.published} | 🧩 {paper.source}
+              </p>
             </div>
-          ))
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
-          <button
-            onClick={() => setOffset(Math.max(0, offset - limit))}
-            disabled={offset === 0}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span>
-            Page {Math.floor(offset / limit) + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setOffset(offset + limit)}
-            disabled={offset + limit >= total}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+          ))}
         </div>
       )}
-    </div>
+    </main>
   );
 }
 

@@ -1,36 +1,22 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from datetime import date
-from app.db import SessionLocal
-from app.models import Paper
+from app.db import get_db
+from app.models import Paper, PaperCreate, PaperRead
 
-router = APIRouter(prefix="/api", tags=["papers"])
+router = APIRouter()
 
-# Dependency: create and close DB session per request
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@router.get("/papers", response_model=list[PaperRead])
+def list_papers(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    papers = db.query(Paper).offset(skip).limit(limit).all()
+    return papers
 
-@router.get("/papers")
-def list_papers(limit: int = 10, offset: int = 0, db: Session = Depends(get_db)):
-    papers = db.query(Paper).offset(offset).limit(limit).all()
-    total = db.query(Paper).count()
-    return {"results": papers, "total": total}
-
-@router.post("/papers")
-def create_paper(paper: dict, db: Session = Depends(get_db)):
-    new_paper = Paper(
-        title=paper["title"],
-        authors=paper["authors"],
-        published=date.fromisoformat(paper["published"]),
-        url=paper["url"],
-        source=paper["source"],
-    )
+@router.post("/papers", response_model=PaperRead)
+def add_paper(paper: PaperCreate, db: Session = Depends(get_db)):
+    new_paper = Paper(**paper.dict())
     db.add(new_paper)
     db.commit()
     db.refresh(new_paper)
     return new_paper
+
+
 
