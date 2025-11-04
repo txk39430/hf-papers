@@ -1,27 +1,25 @@
-__pycache__/
-*.pyc
-.venv/
-.env
-.DS_Store
-
-# docker volumes/logs (keep compose file tracked)
-db_data/
-*.log
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.db
 .venv/
 .env
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
 
 # macOS
 .DS_Store
 
-# Docker
-db_data/
+# IDE
+.idea/
+.vscode/
+*.iml
 
-# Node / Next.js (frontend)
-frontend/node_modules/
-frontend/.next/
-frontend/.vercel/
-frontend/.env.local
+# Logs
+*.log
 

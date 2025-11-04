@@ -4,16 +4,16 @@ from app.routers import router as papers_router
 
 app = FastAPI(title="HF Papers API")
 
-# Enable CORS so frontend (localhost:3000) can talk to backend (localhost:8000)
+# ✅ Allow frontend (localhost:3000) to access backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in production, restrict this
+    allow_origins=["*"],  # or ["http://localhost:3000"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register the /api/papers routes
+# ✅ Register routes
 app.include_router(papers_router, prefix="/api")
 
 @app.get("/")

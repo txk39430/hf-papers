@@ -67,7 +67,8 @@ export default function Home() {
                     {paper.authors || "Unknown authors"}
                   </p>
                   <div className="flex justify-between items-center mt-3 text-gray-400 text-sm">
-                    <span>📅 {paper.published}</span>
+                    <span
+                    >📅 {paper.published}</span>
                     <span>🌐 {paper.source}</span>
                   </div>
                 </div>
