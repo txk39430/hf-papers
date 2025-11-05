@@ -50,3 +50,9 @@ if __name__ == "__main__":
     papers = fetch_arxiv_papers()
     save_papers_to_db(papers)
 
+def fetch_and_store_papers():
+    """Fetch new papers and store them in the database."""
+    papers = fetch_arxiv_papers()
+    if papers:
+        save_papers_to_db(papers)
+
