@@ -1,8 +1,8 @@
-"""create papers table
+"""create papers table with summary column
 
-Revision ID: 9d7fc68c04fb
-Revises: 90f158397d95
-Create Date: 2025-11-02 22:48:53.108798
+Revision ID: fb7ccadd9cbb
+Revises: 
+Create Date: 2025-11-05 11:51:19.526835
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9d7fc68c04fb'
+revision: str = 'fb7ccadd9cbb'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,9 +24,10 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('authors', sa.String(), nullable=False),
-    sa.Column('published', sa.Date(), nullable=True),
-    sa.Column('url', sa.String(), nullable=True),
-    sa.Column('source', sa.String(), nullable=True),
+    sa.Column('published', sa.Date(), nullable=False),
+    sa.Column('url', sa.String(), nullable=False),
+    sa.Column('source', sa.String(), nullable=False),
+    sa.Column('summary', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_papers_id'), 'papers', ['id'], unique=False)

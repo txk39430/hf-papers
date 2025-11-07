@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Date
-from sqlalchemy.ext.declarative import declarative_base
+from app.db import Base 
 from pydantic import BaseModel
 from datetime import date
+from sqlalchemy import Column, Integer, String, DateTime, Text
 
-Base = declarative_base()
 
 # --- SQLAlchemy model (for DB table) ---
 class Paper(Base):
@@ -15,6 +15,9 @@ class Paper(Base):
     published = Column(Date, nullable=False)
     url = Column(String, nullable=False)
     source = Column(String, nullable=False)
+    summary = Column(Text, nullable=True)
+    thumbnail = Column(String, nullable=True)
+
 
 # --- Pydantic schemas (for API I/O) ---
 class PaperCreate(BaseModel):
